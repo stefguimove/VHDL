@@ -52,6 +52,9 @@ begin
       -- État d'attente d'une requête de la FSM principale
       when wait_data_req =>
         adc_data_ready <= '1';
+        adc_write_conv_data <= '0';
+        adc_rdb <= '1';
+        adc_csb <= '1';
         if adc_data_request = '1' then
           next_state <= convst;
         else
@@ -61,10 +64,12 @@ begin
       -- Lancement de la conversion
       when convst =>
         adc_convstb <= '0';
+        adc_data_ready <= '0';
         next_state <= eoc_wait;
 
       -- Attente de la fin de conversion de l'ADC
       when eoc_wait =>
+        adc_convstb <= '1';
         if adc_eocb = '0' then
           next_state <= rd;
         else
@@ -79,8 +84,6 @@ begin
 
       -- Maintien de la lecture et ordre d'écriture dans le registre du FPGA
       when rd_wr =>
-        adc_rdb <= '0';
-        adc_csb <= '0';
         adc_write_conv_data <= '1';
         next_state <= wait_data_req;
 
