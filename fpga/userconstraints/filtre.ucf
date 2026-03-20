@@ -1,0 +1,49 @@
+##
+## -----------------------
+## Assign a signal to a range of I/O pins
+## -----------------------
+
+##clk reset
+NET clk LOC = T9;
+NET reset LOC = L14;
+
+##convertisseur AN
+NET filter_in(7) LOC = C7;
+NET filter_in(6) LOC = C6;
+NET filter_in(5) LOC = C5;
+NET filter_in(4) LOC = E6;
+NET filter_in(3) LOC = C9;
+NET filter_in(2) LOC = C8;
+NET filter_in(1) LOC = A3;
+NET filter_in(0) LOC = D5;
+# envoi sur le connecteur A1 (inutilise)
+NET adc_csb LOC = E7;
+NET adc_rdb LOC = "M7";
+# NET adc_eocb LOC = A3;
+NET adc_eocb LOC = D10;
+NET adc_convstb LOC = D6;
+
+##convertisseur NA
+NET filter_out(7) LOC = A7;
+NET filter_out(6) LOC = A8;
+NET filter_out(5) LOC = B10;
+NET filter_out(4) LOC = B13;
+NET filter_out(3) LOC = A12;
+NET filter_out(2) LOC = A13;
+NET filter_out(1) LOC = B8;
+NET filter_out(0) LOC = A9;
+NET dac_wrb LOC = A10;
+# envoi sur le connecteur A1 (inutilise)
+NET dac_csb LOC = "M10";
+# NET dac_csb LOC = D5;
+NET dac_ldacb LOC = "F3";
+# NET dac_ldacb LOC = N5;
+NET dac_clrb LOC = "G4";
+# NET dac_clrb LOC = C1;
+
+#
+
+
+
+
+
