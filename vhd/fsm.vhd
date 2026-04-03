@@ -74,7 +74,7 @@ begin
                 adc_data_request <= '1';
                 next_count <= count + 1;
                 delay_line_sample_shift <= '0';
-                if count = 32 then
+                if next_count = 32 then
                     next_state <= MULT;
                 else
                     next_state <= DATA_WAIT;
