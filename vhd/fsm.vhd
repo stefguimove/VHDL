@@ -23,7 +23,7 @@ architecture behav of fsm is
     signal current_state, next_state : state_type;
 
     -- Compteur interne (de 0 à 32)
-    signal count : integer range 0 to 32;
+    signal count, next_count : integer range 0 to 32;
 
 begin
 
@@ -33,6 +33,7 @@ begin
             current_state <= INIT; 
         elsif rising_edge(clk) then
             current_state <= next_state;
+            count <= next_count;
         end if;
     end process;
 
