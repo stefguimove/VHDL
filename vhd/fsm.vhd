@@ -58,6 +58,7 @@ begin
         case current_state is
 
             when INIT_ST =>
+                accu_ctrl <= '0';
                 next_count <= 0;
                 next_state <= DATA_WAIT_ST;
 
@@ -97,7 +98,7 @@ begin
                 end if;
 
             when LOAD_BUFFER_ST =>
-                -- accu_ctrl repasse à '0' grâce aux valeurs par défaut
+                accu_ctrl <= '1'
                 next_state <= DATA_OUT_ST;
 
             when DATA_OUT_ST =>
