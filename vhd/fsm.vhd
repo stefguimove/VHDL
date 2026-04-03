@@ -23,7 +23,7 @@ architecture behav of fsm is
     signal current_state, next_state : state_type;
 
     -- Compteur interne (de 0 à 32)
-    signal count, next_count : integer range 0 to 32;
+    signal count : integer range 0 to 32;
 
 begin
 
@@ -33,7 +33,6 @@ begin
             current_state <= INIT; 
         elsif rising_edge(clk) then
             current_state <= next_state;
-            count         <= next_count;
         end if;
     end process;
 
@@ -48,7 +47,6 @@ begin
         accu_ctrl               <= '0';
         buff_oe                 <= '0';
         next_state              <= current_state;
-        next_count              <= count;
 
         case current_state is
             when INIT =>
@@ -72,15 +70,15 @@ begin
                 next_state <= DATA_REQUEST;
             when DATA_REQUEST =>
                 adc_data_request <= '1';
-                next_count <= count + 1;
+                count <= count + 1;
                 delay_line_sample_shift <= '0';
-                if next_count = 32 then
+                if count = 32 then
                     next_state <= MULT;
                 else
                     next_state <= DATA_WAIT;
                 end if;
             when MULT =>
-                next_count <= count - 1;
+                count <= count - 1;
                 rom_address <= std_logic_vector(to_unsigned(31 - count, 5));
                 delay_line_address <= std_logic_vector(to_unsigned(count - 1, 5));
                 accu_ctrl <= '1';
