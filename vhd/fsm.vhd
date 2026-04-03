@@ -52,7 +52,7 @@ begin
 
         case current_state is
             when INIT =>
-                next_count <= '0';
+                next_count <= 0;
                 next_state <= DATA_WAIT;
             when DATA_WAIT =>
                 adc_data_request <= '1';
