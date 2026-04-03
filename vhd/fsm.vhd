@@ -27,23 +27,11 @@ architecture behav of fsm is
 
 begin
 
-    count <= 0;
-    current_state <= INIT;
-    adc_data_request        <= '0';
-    dac_conv_data           <= '0';
-    rom_address             <= (others => '0');
-    delay_line_address      <= (others => '0');
-    delay_line_sample_shift <= '0';
-    accu_ctrl               <= '0';
-    buff_oe                 <= '0';
-    next_state              <= current_state;
-    next_count              <= count;
-
     clock:process(clk, reset)
     begin
         if reset = '1' then
             current_state <= INIT; 
-        elsif reset = '0' and rising_edge(clk) then
+        elsif rising_edge(clk) then
             current_state <= next_state;
             count         <= next_count;
         end if;
@@ -51,6 +39,19 @@ begin
 
     main:process(current_state, count, adc_data_ready)
     begin
+
+        count <= 0;
+        current_state <= INIT;
+        adc_data_request        <= '0';
+        dac_conv_data           <= '0';
+        rom_address             <= (others => '0');
+        delay_line_address      <= (others => '0');
+        delay_line_sample_shift <= '0';
+        accu_ctrl               <= '0';
+        buff_oe                 <= '0';
+        next_state              <= current_state;
+        next_count              <= count;
+        
         case current_state is
             when INIT =>
                 adc_data_request        <= '0';
