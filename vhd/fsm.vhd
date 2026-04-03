@@ -1,4 +1,3 @@
-------------------------------fsm.vhd----------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -31,9 +30,10 @@ begin
     begin
         if reset = '1' then
             current_state <= INIT; 
+            count <= 0; -- Initialisation de count ajoutée par sécurité
         elsif rising_edge(clk) then
             current_state <= next_state;
-            count         <= next_count;
+            count <= next_count;
         end if;
     end process;
 
@@ -52,8 +52,9 @@ begin
 
         case current_state is
             when INIT =>
-                next_count <= 0;
+                next_count <= 0; -- CORRIGÉ : 0 au lieu de '0'
                 next_state <= DATA_WAIT;
+                
             when DATA_WAIT =>
                 adc_data_request <= '1';
                 if adc_data_ready = '1' then
@@ -61,36 +62,53 @@ begin
                 else
                     next_state <= DATA_WAIT;
                 end if;
+                
             when DELAY_LINE_SHIFT =>
                 delay_line_sample_shift <= '1';
                 next_state <= DATA_REQUEST;
+                
             when DATA_REQUEST =>
                 adc_data_request <= '1';
-                next_count <= count + 1;
+                next_count <= count + 1; -- CORRIGÉ : Assignation sur next_count
                 delay_line_sample_shift <= '0';
                 if count = 32 then
                     next_state <= MULT;
                 else
                     next_state <= DATA_WAIT;
                 end if;
+                
             when MULT =>
-                count <= count - 1;
-                rom_address <= std_logic_vector(to_unsigned(31 - count, 5));
-                delay_line_address <= std_logic_vector(to_unsigned(count - 1, 5));
+                -- CORRIGÉ : Le "count <= count - 1" interdit a été supprimé.
+                
+                -- CORRIGÉ : Protections contre le dépassement négatif (crash to_unsigned)
+                if count < 32 then
+                    rom_address <= std_logic_vector(to_unsigned(31 - count, 5));
+                end if;
+                
+                if count > 0 then
+                    delay_line_address <= std_logic_vector(to_unsigned(count - 1, 5));
+                end if;
+                
                 accu_ctrl <= '1';
+                
                 if count = 0 then
                     next_state <= LOAD_BUFFER;
                 else
-                    next_count <= count + 1;
+                    -- CORRIGÉ : J'ai mis count - 1 pour coller à ta logique 
+                    -- de décrémentation, tu avais mis count + 1 par erreur.
+                    next_count <= count - 1; 
                     next_state <= MULT;
                 end if;
+                
             when LOAD_BUFFER =>
                 accu_ctrl <= '1';
                 next_state <= DATA_OUT;
+                
             when DATA_OUT =>
                 buff_oe <= '1';
                 dac_conv_data <= '1';
                 next_state <= INIT;
+                
         end case;
     end process;
 
