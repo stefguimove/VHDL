@@ -98,9 +98,9 @@ begin
             when LOAD_BUFFER =>
                 accu_ctrl <= '1';
                 next_state <= DATA_OUT;
+                buff_oe <= '1';
                 
             when DATA_OUT =>
-                buff_oe <= '1';
                 dac_conv_data <= '1';
                 next_state <= INIT;
                 
