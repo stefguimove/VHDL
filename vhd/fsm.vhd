@@ -65,7 +65,7 @@ begin
                 next_state <= DATA_REQUEST;
             when DATA_REQUEST =>
                 adc_data_request <= '1';
-                count <= count + 1;
+                next_count <= count + 1;
                 delay_line_sample_shift <= '0';
                 if count = 32 then
                     next_state <= MULT;
