@@ -1,3 +1,4 @@
+------------------------------fsm.vhd----------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -17,94 +18,77 @@ end fsm;
 
 architecture behav of fsm is
 
-    type state_type is (INIT_ST, DATA_WAIT_ST, DELAY_LINE_SHIFT_ST, DATA_REQUEST_ST, MULT_ST, LOAD_BUFFER_ST, DATA_OUT_ST);
+    -- Définition des états de la machine
+    type state_type is (INIT, DATA_WAIT, DELAY_LINE_SHIFT, DATA_REQUEST, MULT, LOAD_BUFFER, DATA_OUT);
     signal current_state, next_state : state_type;
 
-    -- Compteur interne (de 0 à 31 est suffisant)
-    signal count, next_count : integer range 0 to 31;
+    -- Compteur interne (de 0 à 32)
+    signal count, next_count : integer range 0 to 32;
 
 begin
 
-    -- Processus synchrone
-    process(clk, reset)
+    count <= 0;
+    current_state <= INIT;
+    adc_data_request        <= '0';
+    dac_conv_data           <= '0';
+    rom_address             <= (others => '0');
+    delay_line_address      <= (others => '0');
+    delay_line_sample_shift <= '0';
+    accu_ctrl               <= '0';
+    buff_oe                 <= '0';
+    next_state              <= current_state;
+    next_count              <= count;
+
+    clock:process(clk, reset)
     begin
         if reset = '1' then
-            current_state <= INIT_ST;
-            count         <= 0;
+            current_state <= INIT; 
         elsif rising_edge(clk) then
             current_state <= next_state;
             count         <= next_count;
         end if;
     end process;
 
-    -- Processus combinatoire
-    process(current_state, count, adc_data_ready)
+    main:process(current_state, count, adc_data_ready)
     begin
-        -- Valeurs par défaut
-        next_state              <= current_state;
-        next_count              <= count;
-        adc_data_request        <= '0';
-        dac_conv_data           <= '0';
-        rom_address             <= (others => '0');
-        delay_line_address      <= (others => '0');
-        delay_line_sample_shift <= '0';
-        accu_ctrl               <= '0';
-        buff_oe                 <= '0';
-
         case current_state is
-
-            when INIT_ST =>
-                next_count <= 0;
-                next_state <= DATA_WAIT_ST;
-
-            when DATA_WAIT_ST =>
-                if adc_data_ready = '1' then
-                    next_state <= DELAY_LINE_SHIFT_ST;
-                end if;
-
-            when DELAY_LINE_SHIFT_ST =>
-                delay_line_sample_shift <= '1';
-                next_state <= DATA_REQUEST_ST;
-
-            when DATA_REQUEST_ST =>
+            when INIT =>
+                adc_data_request        <= '0';
+                dac_conv_data           <= '0';
+                rom_address             <= (others => '0');
+                delay_line_address      <= (others => '0');
+                delay_line_sample_shift <= '0';
+                accu_ctrl               <= '0';
+                buff_oe                 <= '0';
+                next_state <= DATA_WAIT;
+            when DATA_WAIT =>
                 adc_data_request <= '1';
-                next_count <= 0; -- On prépare le compteur pour le calcul
-                next_state <= MULT_ST; -- On va DIRECTEMENT calculer, pas d'attente !
-
-            when MULT_ST =>
-                -- Adressage direct de 0 à 31
-                rom_address        <= std_logic_vector(to_unsigned(count, 5));
-                delay_line_address <= std_logic_vector(to_unsigned(count, 5));
-
-                -- Écrasement de l'ancien résultat au premier cycle, accumulation ensuite
-                if count = 0 then
-                    accu_ctrl <= '0';
-                else
-                    accu_ctrl <= '1';
-                end if;
-
-                -- Gestion de la boucle de 32 multiplications
-                if count = 31 then
-                    next_state <= LOAD_BUFFER_ST;
-                else
-                    next_count <= count + 1;
-                    next_state <= MULT_ST;
-                end if;
-
-            when LOAD_BUFFER_ST =>
-                -- On maintient l'accumulation si le datapath a 1 cycle de latence (pipeline)
+                next_state <= DELAY_LINE_SHIFT when adc_data_ready = '1' else
+                              DATA_WAIT;
+            when DELAY_LINE_SHIFT =>
+                delay_line_sample_shift <= '1';
+                next_state <= DATA_REQUEST;
+            when DATA_REQUEST =>
+                adc_data_request <= '1';
+                next_count <= count + 1;
+                delay_line_sample_shift <= '0';
+                next_state <= MULT when count = 32 else
+                              DATA_WAIT when count < 32 else
+                              DATA_REQUEST;
+            when MULT =>
+                next_count <= count - 1;
+                rom_address <= std_logic_vector(to_unsigned(31 - count, 5));
+                delay_line_address <= std_logic_vector(to_unsigned(count - 1, 5));
                 accu_ctrl <= '1';
-                next_state <= DATA_OUT_ST;
-
-            when DATA_OUT_ST =>
-                buff_oe       <= '1';
+                next_state <= LOAD_BUFFER when count = 0 else
+                              MULT;
+            when LOAD_BUFFER =>
+                accu_ctrl <= '1';
+                next_state <= DATA_OUT;
+            when DATA_OUT =>
+                buff_oe <= '1';
                 dac_conv_data <= '1';
-                -- On a fini un échantillon, on retourne attendre le prochain de l'ADC
-                next_state    <= DATA_WAIT_ST; 
-
-            when others =>
-                next_state <= INIT_ST;
-
+                next_state <= INIT;
         end case;
     end process;
 
