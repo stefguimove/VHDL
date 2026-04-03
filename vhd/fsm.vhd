@@ -1,4 +1,3 @@
-------------------------------fsm.vhd----------------------------------------
 library ieee;
 use ieee.std_logic_1164.all;
 use ieee.numeric_std.all;
@@ -18,16 +17,15 @@ end fsm;
 
 architecture behav of fsm is
 
-    -- Définition des états de la machine
     type state_type is (INIT_ST, DATA_WAIT_ST, DELAY_LINE_SHIFT_ST, DATA_REQUEST_ST, MULT_ST, LOAD_BUFFER_ST, DATA_OUT_ST);
     signal current_state, next_state : state_type;
 
-    -- Compteur interne (de 0 à 32)
-    signal count, next_count : integer range 0 to 32;
+    -- Compteur interne (de 0 à 31 est suffisant)
+    signal count, next_count : integer range 0 to 31;
 
 begin
 
-    -- Processus synchrone : Mise à jour de l'état et du compteur à chaque front d'horloge
+    -- Processus synchrone
     process(clk, reset)
     begin
         if reset = '1' then
@@ -39,14 +37,12 @@ begin
         end if;
     end process;
 
-    -- Processus combinatoire : Logique du prochain état et affectation des sorties
+    -- Processus combinatoire
     process(current_state, count, adc_data_ready)
     begin
-        -- Valeurs par défaut pour éviter de créer des latches
+        -- Valeurs par défaut
         next_state              <= current_state;
         next_count              <= count;
-
-        -- Sorties à 0 par défaut (sauf si écrasées dans un état spécifique)
         adc_data_request        <= '0';
         dac_conv_data           <= '0';
         rom_address             <= (others => '0');
@@ -58,7 +54,6 @@ begin
         case current_state is
 
             when INIT_ST =>
-                accu_ctrl <= '0';
                 next_count <= 0;
                 next_state <= DATA_WAIT_ST;
 
@@ -73,38 +68,39 @@ begin
 
             when DATA_REQUEST_ST =>
                 adc_data_request <= '1';
-                next_count <= count + 1;
-
-                -- On vérifie la valeur future du compteur pour déclencher la transition
-                if (count + 1) = 32 then
-                    next_state <= MULT_ST;
-                else
-                    next_state <= DATA_WAIT_ST;
-                end if;
+                next_count <= 0; -- On prépare le compteur pour le calcul
+                next_state <= MULT_ST; -- On va DIRECTEMENT calculer, pas d'attente !
 
             when MULT_ST =>
-                accu_ctrl <= '1';
-                
-                -- Utilisation de la valeur actuelle du compteur pour les adresses
-                -- Cela évite les dépassements (overflow) sur 5 bits puisque count va de 32 à 1
-                rom_address        <= std_logic_vector(to_unsigned(32 - count, 5));
-                delay_line_address <= std_logic_vector(to_unsigned(count - 1, 5));
+                -- Adressage direct de 0 à 31
+                rom_address        <= std_logic_vector(to_unsigned(count, 5));
+                delay_line_address <= std_logic_vector(to_unsigned(count, 5));
 
-                next_count <= count - 1;
+                -- Écrasement de l'ancien résultat au premier cycle, accumulation ensuite
+                if count = 0 then
+                    accu_ctrl <= '0';
+                else
+                    accu_ctrl <= '1';
+                end if;
 
-                -- Transition si on arrive à 0 au prochain cycle
-                if (count - 1) = 0 then
+                -- Gestion de la boucle de 32 multiplications
+                if count = 31 then
                     next_state <= LOAD_BUFFER_ST;
+                else
+                    next_count <= count + 1;
+                    next_state <= MULT_ST;
                 end if;
 
             when LOAD_BUFFER_ST =>
+                -- On maintient l'accumulation si le datapath a 1 cycle de latence (pipeline)
                 accu_ctrl <= '1';
                 next_state <= DATA_OUT_ST;
 
             when DATA_OUT_ST =>
                 buff_oe       <= '1';
                 dac_conv_data <= '1';
-                next_state    <= INIT_ST;
+                -- On a fini un échantillon, on retourne attendre le prochain de l'ADC
+                next_state    <= DATA_WAIT_ST; 
 
             when others =>
                 next_state <= INIT_ST;
