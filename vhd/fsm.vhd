@@ -47,16 +47,11 @@ begin
         accu_ctrl               <= '0';
         buff_oe                 <= '0';
         next_state              <= current_state;
+        next_count              <= count;
 
         case current_state is
             when INIT =>
-                adc_data_request        <= '0';
-                dac_conv_data           <= '0';
-                rom_address             <= (others => '0');
-                delay_line_address      <= (others => '0');
-                delay_line_sample_shift <= '0';
-                accu_ctrl               <= '0';
-                buff_oe                 <= '0';
+                next_count <= '0';
                 next_state <= DATA_WAIT;
             when DATA_WAIT =>
                 adc_data_request <= '1';
@@ -85,6 +80,7 @@ begin
                 if count = 0 then
                     next_state <= LOAD_BUFFER;
                 else
+                    next_count <= count + 1;
                     next_state <= MULT;
                 end if;
             when LOAD_BUFFER =>
