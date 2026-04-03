@@ -43,7 +43,7 @@ begin
     begin
         if reset = '1' then
             current_state <= INIT; 
-        elsif rising_edge(clk) then
+        elsif reset = '0' and rising_edge(clk) then
             current_state <= next_state;
             count         <= next_count;
         end if;
