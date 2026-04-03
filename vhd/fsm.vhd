@@ -40,8 +40,6 @@ begin
     main:process(current_state, count, adc_data_ready)
     begin
 
-        count <= 0;
-        current_state <= INIT;
         adc_data_request        <= '0';
         dac_conv_data           <= '0';
         rom_address             <= (others => '0');
@@ -51,7 +49,7 @@ begin
         buff_oe                 <= '0';
         next_state              <= current_state;
         next_count              <= count;
-        
+
         case current_state is
             when INIT =>
                 adc_data_request        <= '0';
