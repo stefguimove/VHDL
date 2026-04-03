@@ -33,6 +33,7 @@ begin
             current_state <= INIT; 
         elsif rising_edge(clk) then
             current_state <= next_state;
+            count         <= next_count;
         end if;
     end process;
 
