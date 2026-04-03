@@ -98,7 +98,7 @@ begin
                 end if;
 
             when LOAD_BUFFER_ST =>
-                accu_ctrl <= '1'
+                accu_ctrl <= '1';
                 next_state <= DATA_OUT_ST;
 
             when DATA_OUT_ST =>
