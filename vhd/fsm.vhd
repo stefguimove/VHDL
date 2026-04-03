@@ -63,8 +63,11 @@ begin
                 next_state <= DATA_WAIT;
             when DATA_WAIT =>
                 adc_data_request <= '1';
-                next_state <= DELAY_LINE_SHIFT when adc_data_ready = '1' else
-                              DATA_WAIT;
+                if adc_data_ready = '1' then
+                    next_state <= DELAY_LINE_SHIFT;
+                else
+                    next_state <= DATA_WAIT;
+                end if;
             when DELAY_LINE_SHIFT =>
                 delay_line_sample_shift <= '1';
                 next_state <= DATA_REQUEST;
@@ -72,16 +75,21 @@ begin
                 adc_data_request <= '1';
                 next_count <= count + 1;
                 delay_line_sample_shift <= '0';
-                next_state <= MULT when count = 32 else
-                              DATA_WAIT when count < 32 else
-                              DATA_REQUEST;
+                if count = 32 then
+                    next_state <= MULT;
+                else
+                    next_state <= DATA_WAIT;
+                end if;
             when MULT =>
                 next_count <= count - 1;
                 rom_address <= std_logic_vector(to_unsigned(31 - count, 5));
                 delay_line_address <= std_logic_vector(to_unsigned(count - 1, 5));
                 accu_ctrl <= '1';
-                next_state <= LOAD_BUFFER when count = 0 else
-                              MULT;
+                if count = 0 then
+                    next_state <= LOAD_BUFFER;
+                else
+                    next_state <= MULT;
+                end if;
             when LOAD_BUFFER =>
                 accu_ctrl <= '1';
                 next_state <= DATA_OUT;
