@@ -67,11 +67,13 @@ begin
                 next_state <= DATA_REQUEST;
             when DATA_REQUEST =>
                 adc_data_request <= '1';
-                next_count <= count + 1;
                 delay_line_sample_shift <= '0';
-                if count = 32 then
+                
+                if count = 31 then
+                    next_count <= 31; -- On initialise le compteur à 31 pour le MULT
                     next_state <= MULT;
                 else
+                    next_count <= count + 1;
                     next_state <= DATA_WAIT;
                 end if;
             when MULT =>
