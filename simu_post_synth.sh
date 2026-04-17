@@ -14,7 +14,7 @@ vcom -93 output_fsm.vhd
 
 # 4. Compilation de ton TESTBENCH
 # Assure-toi que le testbench est dans le même dossier ou ajuste le chemin
-vcom -93 bench.vhd
+vcom -93 bench/bench.vhd
 
 # 5. Lancement de la simulation avec le fichier SDF
 # -sdftyp /UUT=... : On injecte les délais dans l'instance de ton filtre
