@@ -87,7 +87,7 @@ begin
                     next_state <= LOAD_BUFFER;
                     next_count <= 0; -- Sécurité
                 else
-                    next_count <= count;
+                    next_count <= count - 1;
                     next_state <= MULT;
                 end if;
             when LOAD_BUFFER =>
