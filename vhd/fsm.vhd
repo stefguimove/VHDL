@@ -80,7 +80,7 @@ begin
             when MULT =>
                 rom_address <= std_logic_vector(to_unsigned(31 - count, 5));
                 delay_line_address <= std_logic_vector(to_unsigned(count, 5)); 
-                if count = 31 then
+                if count < 31 then
                     accu_ctrl <= '0';
                 end if;
                 if count = 0 then
