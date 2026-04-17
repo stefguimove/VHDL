@@ -77,14 +77,16 @@ begin
                     next_state <= DATA_WAIT;
                 end if;
             when MULT =>
-                next_count <= count - 1;
                 rom_address <= std_logic_vector(to_unsigned(31 - count, 5));
-                delay_line_address <= std_logic_vector(to_unsigned(count - 1, 5));
+                delay_line_address <= std_logic_vector(to_unsigned(count, 5)); 
+                
                 accu_ctrl <= '1';
+                
                 if count = 0 then
                     next_state <= LOAD_BUFFER;
+                    next_count <= 0; -- Sécurité
                 else
-                    next_count <= count + 1;
+                    next_count <= count
                     next_state <= MULT;
                 end if;
             when LOAD_BUFFER =>
