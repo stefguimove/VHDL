@@ -46,7 +46,7 @@ begin
         rom_address             <= (others => '0');
         delay_line_address      <= (others => '0');
         delay_line_sample_shift <= '0';
-        accu_ctrl               <= '0';
+        accu_ctrl               <= '1';
         buff_oe                 <= '0';
         next_state              <= current_state;
         next_count              <= count;
