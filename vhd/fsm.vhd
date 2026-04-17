@@ -55,6 +55,7 @@ begin
             when INIT =>
                 next_count <= 0;
                 next_state <= DATA_WAIT;
+                accu_ctrl <= '1';
             when DATA_WAIT =>
                 adc_data_request <= '1';
                 if adc_data_ready = '1' then
@@ -79,9 +80,9 @@ begin
             when MULT =>
                 rom_address <= std_logic_vector(to_unsigned(31 - count, 5));
                 delay_line_address <= std_logic_vector(to_unsigned(count, 5)); 
-                
-                accu_ctrl <= '1';
-                
+                if count = 31 then
+                    accu_ctrl <= '0';
+                end if;
                 if count = 0 then
                     next_state <= LOAD_BUFFER;
                     next_count <= 0; -- Sécurité
